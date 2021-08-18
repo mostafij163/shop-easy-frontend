@@ -1,5 +1,4 @@
-import React, { useState, useEffect, Fragment, } from "react";
-import {useParams, } from "react-router-dom"
+import React, { useEffect, Fragment, } from "react";
 import {
     CardMedia,
     CardContent,
@@ -15,10 +14,8 @@ import axios from "axios"
 // import { RemoveCircle } from "@material-ui/icons";
 // import MainContext from "../../../store/main-context";
 
-export default function Product({shop}) {
-    const [products, setProducts] = useState([])
+export default function Product({shop, handleProducts, products}) {
 
-    console.log(shop)
     useEffect(() => {
         axios.post(
             `http://127.0.0.1:8000/shop/filter-products/${shop["_id"]}`,
@@ -26,14 +23,13 @@ export default function Product({shop}) {
               category: shop.shopCategory 
             }
         ).then(res => {
-            console.log(res)
-            setProducts(res.data)
+            handleProducts(res.data)
         })
-    }, [shop])
+    }, [shop, handleProducts])
 
     return (
         <Fragment>
-            {/* <Grid container spacing={1}>
+            <Grid container spacing={1}>
                 {
                     products.map(product => (
                         <Grid key={product["_id"]} item xs={12} md={4}>
@@ -82,8 +78,7 @@ export default function Product({shop}) {
                         </Grid>
                     ))
                 }
-            </Grid> */}
-            <p>some</p>
+            </Grid>
        </Fragment>
     )
 }

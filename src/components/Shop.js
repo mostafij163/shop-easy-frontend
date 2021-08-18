@@ -24,8 +24,16 @@ const useStyle = makeStyles(() => ({
 export default function Shop() {
     const shopStyles = useStyle()
     const id = useParams().shopId
-    const [shop, setShop] = useState()
-    
+    const [shop, setShop] = useState({
+        closingHour: "",
+        description: "",
+        name: "",
+        openingHour: "",
+        shopCategory: "",
+        _id: ""
+    })
+    const [products, setProducts] = useState([])
+
     useEffect(() => {
        axios.get(`http://127.0.0.1:8000/shop/${id}`).then(res => {
             if (res) {
@@ -73,9 +81,13 @@ export default function Shop() {
         //     }
         // ])
         // setProductCategories(new Set(products.map(prod => prod.category)))
-    }, [])
+    }, [id])
 
     // const [orderedProduct, setorderedProduct] = useState([]);
+
+    function handleProducts(products) {
+        setProducts(products)
+    }
 
     // function handleQuantities(product) {
     //     const existingProduct = orderedProduct.find(prod => prod.productId === product.productId)
@@ -110,7 +122,6 @@ export default function Shop() {
 
     return (
         <Grid container spacing={2} >
-            {console.log(shop)}
             <Grid item xs={12} md={9}>
                 <Card className={shopStyles.root} style={{boxShadow: "none"}}>
                     <CardActionArea>
@@ -139,7 +150,11 @@ export default function Shop() {
                         width: "100%",
                         boxShadow: "none"
                     }}>
-                        <Product shop={shop}/>
+                        <Product
+                            shop={shop}
+                            handleProducts={handleProducts}
+                            products={products}
+                        />
                     </Paper>
                     <CardActions>
                         <Button size="small" color="primary">
