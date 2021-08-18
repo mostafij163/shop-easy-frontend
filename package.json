@@ -1,0 +1,66 @@
+{
+  "name": "beginner",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@date-io/date-fns": "^1.3.13",
+    "@material-ui/core": "^4.12.3",
+    "@material-ui/data-grid": "^4.0.0-alpha.36",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/pickers": "^3.3.10",
+    "@material-ui/styles": "^4.11.4",
+    "@reduxjs/toolkit": "^1.5.0",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "axios": "^0.21.1",
+    "date-fns": "^2.23.0",
+    "jsonwebtoken": "^8.5.1",
+    "material-ui-popup-state": "^1.9.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.3",
+    "react-spring": "^9.2.4",
+    "redux": "^4.0.5",
+    "socket.io-client": "^4.1.2",
+    "styled-components": "^5.3.0",
+    "web-vitals": "^1.0.1"
+  },
+  "scripts": {
+    "start:dev": "parcel public/index.html",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "format": "prettier --write \"src/**/*.{js,jsx}\"",
+    "lint": "eslint \"src/**/*.{js,jsx}\" --quiet"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.22.0",
+    "parcel": "^1.12.4",
+    "prettier": "^2.3.2"
+  }
+}
