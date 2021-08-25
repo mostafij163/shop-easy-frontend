@@ -22,6 +22,8 @@ import AddProduct from "./ui/seller/AddProduct";
 import SellerShop from "./ui/seller/SellerShop"
 import MainContext from "../store/main-context";
 import Product from "./ui/seller/Product"
+import EditProduct from "./ui/seller/EditProduct";
+// import LoginToShop from "./ui/seller/LoginToShop"
 
 const drawerWidth = 240;
 
@@ -74,12 +76,16 @@ export default function ShopDashboard(props) {
   const mainCtx = useContext(MainContext);
   const [shop, setShop] = useState({})
   const [newOrders, setNewOrders] = useState(0)
-  
+  const [products, setProducts] = useState([])
+  const [editProduct, setEditProduct] = useState({})
   const [orders, setOrders] = useState([])
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8000/shop/${mainCtx.shop.sub}`).then(res => {
-      setShop(res.data);
+    axios.get(`
+    http://127.0.0.1:8000/shop/${props.location.state ? props.location.state.id : mainCtx.shop.sub}`
+    ).then(res => {
+      setShop(res.data.shop);
+      localStorage.setItem('shop', res.data.jwt)
     })
     .catch(err => {
       console.log(err)
@@ -129,7 +135,51 @@ export default function ShopDashboard(props) {
                 ]
             }
         ])
-    }, [mainCtx])
+  }, [mainCtx])
+  
+  function fetchProducts() {
+    const shopJwt = localStorage.getItem('shop')
+        axios.get(
+        `http://127.0.0.1:8000/shop/products`,
+        {
+            headers: {
+                'X-shop-jwt': `Bearer ${shopJwt}` 
+            }
+        }
+        ).then(res => {
+            if (res.status == 200) {
+            setProducts(res.data)
+            }
+        })
+  }
+
+  function handleEditProduct(productId) {
+    const productToEdit = products.find(prod => prod["_id"] === productId)
+    setEditProduct(productToEdit)
+  }
+
+  function handleDeleteProduct(productId) {
+    const shopJwt = localStorage.getItem('shop')
+    axios.delete(`http://127.0.0.1:8000/shop/product/${productId}`,
+            {
+                headers: {
+                    'X-shop-jwt': `Bearer ${shopJwt}` 
+                }
+            }
+    ).then(res => {
+      if (res.status == 200) {
+          const productAfterDelete = products.filter(prod => {
+            if (prod["_id"] !== productId) {
+              return prod
+            }
+          })
+          console.log(productAfterDelete)
+          setProducts(productAfterDelete)
+      }
+    }).catch(err => {
+          alert(err.message)
+    })
+  }
 
     const handleDeliveryStatus = (order) => {
         const updatedOrders = orders.map(o => {
@@ -243,6 +293,7 @@ export default function ShopDashboard(props) {
               variant="h6" noWrap
             >
               Shop Dashboard
+              {/* <LoginToShop/> */}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -280,7 +331,15 @@ export default function ShopDashboard(props) {
         <main className={dashboardStyles.content}>
           <Switch>
             <Route path="/dashboard/products" exact>
-              <Product/>
+              <Product
+                fetchProducts={fetchProducts}
+                products={products}
+                handleEditProduct={handleEditProduct}
+                handleDeleteProduct={handleDeleteProduct}
+              />
+            </Route>
+            <Route path="/dashboard/products/:productId" exact>
+              <EditProduct product={ editProduct}/>
             </Route>
             <Route path="/dashboard/orders" exact>
               <Orders orders={orders} handleDeliveryStatus={handleDeliveryStatus} />

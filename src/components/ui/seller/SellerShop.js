@@ -1,15 +1,10 @@
 import { Fragment } from "react";
 import {
     Typography,
-    Button,
     CardMedia,
     CardContent,
-    CardActions,
     CardActionArea,
     Card,
-    Paper,
-    makeStyles,
-    Grid,
 } from "@material-ui/core";
 
 export default function SellerShop({shop}) {

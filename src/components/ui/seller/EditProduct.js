@@ -1,4 +1,5 @@
-import React, { Fragment, useState, useContext } from "react";
+import React, { Fragment, useState, useEffect, } from "react";
+import { useHistory } from "react-router-dom";
 import {
     Paper,
     makeStyles,
@@ -7,7 +8,6 @@ import {
     TextareaAutosize,
 } from "@material-ui/core"
 import axios from "axios"
-import MainContext from "../../../store/main-context";
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -26,18 +26,30 @@ const useStyle = makeStyles(theme => ({
     }
 }))
 
-export default function AddProduct({ shopCategory }) {
+export default function EditProduct({ product, shopCategory }) {
     const addProductStyles = useStyle()
-    const mainCtx = useContext(MainContext)
+    const history = useHistory()
+    const [id, setid] = useState("");
     const [title, setTitle] = useState("")
     const [price, setPrice] = useState(1)
     const [manufacturer, setManufacturer] = useState("")
     const [category, setCategory] = useState("");
     const [color, setColor] = useState([])
-    const [availableSize, setAvailableSize] = useState([])
+    const [availableSize, setAvilableSize] = useState([])
     const [description, setDescription] = useState("")
 
-    const handleAddProductForm = (e) => {
+    useEffect(() => {
+        setid(product["_id"])
+        setTitle(product.title)
+        setCategory(product.category)
+        setManufacturer(product.manufacturer)
+        setPrice(product.price)
+        setColor(product.color)
+        setAvilableSize(product.availableSize)
+        setDescription(product.description)
+    }, [product])
+
+    const handleEditProductForm = (e) => {
         e.preventDefault();
         const shopJwt = localStorage.getItem('shop');
         const data = {
@@ -50,7 +62,7 @@ export default function AddProduct({ shopCategory }) {
             description
         }
         axios.post(
-            `http://127.0.0.1:8000/shop/add-new-product/${mainCtx.shop.sub}`,
+            `http://127.0.0.1:8000/shop/product/${id}`,
             data,
             {
                 headers: {
@@ -58,14 +70,16 @@ export default function AddProduct({ shopCategory }) {
                 }
             }
         ).then(res => {
-            console.log(res)
+            if(res.status == 201) history.push('/dashboard/products/')
+        }).catch(err => {
+            alert(err.message)
         })
     }
 
     return (
         <Fragment>
             <Paper classes={{ root: addProductStyles.paper }}>
-                <form onSubmit={handleAddProductForm}>
+                <form onSubmit={handleEditProductForm}>
                     <TextField
                         className={addProductStyles.input}
                         id="title"
@@ -123,7 +137,7 @@ export default function AddProduct({ shopCategory }) {
                                     label="Available Sizes" variant="outlined"
                                     onChange={(e) => {
                                         const values = e.target.value.split(",")
-                                        setAvailableSize(values)
+                                        setAvilableSize(values)
                                     }}
                                     value={availableSize}
                                 />
@@ -153,7 +167,7 @@ export default function AddProduct({ shopCategory }) {
                     ></TextareaAutosize>
                     <div className={addProductStyles["btn-container"]}>
                         <Button variant="contained" type="submit" className={ addProductStyles["submit-btn"]} color="primary">
-                            Create
+                            Update
                         </Button>
                     </div>
                 </form>

@@ -1,4 +1,5 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, { useEffect, Fragment, } from "react";
+import {Link, } from "react-router-dom"
 import {
     CardMedia,
     CardContent,
@@ -9,83 +10,80 @@ import {
     IconButton,
     makeStyles,
 } from "@material-ui/core";
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import axios from "axios"
-// import { RemoveCircle } from "@material-ui/icons";
-import MainContext from "../../../store/main-context";
-import { Fragment } from "react";
+import EditIcon from "@material-ui/icons/Edit"
+import DeleteIcon from "@material-ui/icons/Delete"
 
 const useStyle = makeStyles(() => ({
-
+    root: {
+        margin: "1rem"
+    }
 }))
 
-export default function Product({product}) {
+export default function Product({
+    products,
+    fetchProducts,
+    handleEditProduct,
+    handleDeleteProduct
+}) {
     const productStyles = useStyle()
-    const [products, setProducts] = useState([])
 
     useEffect(() => {
-        const shopJwt = localStorage.getItem('shop')
-        console.log(shopJwt)
-        axios.get(
-        `http://127.0.0.1:8000/shop/products`,
-        {
-            headers: {
-                'X-shop-jwt': `Bearer ${shopJwt}` 
-            }
-        }
-        ).then(res => {
-        if (res.status == 200) {
-            console.log(res.data)
-            setProducts(res.data)
-            }
-        })
+        fetchProducts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    const productList = products.map((prod) => (
+        <Card key={ prod["_id"] } className={productStyles.root}>
+            <CardActionArea>
+                <CardMedia
+                    component="img"
+                    alt="product photo"
+                    height="170"
+                    image={prod.img}
+                    title={prod.title}
+                />
+                <CardContent>
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                    >
+                        { prod.title }
+                        <Typography
+                            variant="button"
+                            color="primary"
+                            style={{display: "inline-block", width: "4rem"}}
+                        >
+                            TK. {prod.price}
+                        </Typography>
+                    </Typography>
+                </CardContent>
+            </CardActionArea>
+            <CardActions>
+                <IconButton
+                    style={{ margin: "0 auto" }}
+                    component={Link}
+                    to={`/dashboard/products/${prod["_id"]}`}
+                    onClick={() => {
+                        handleEditProduct(prod["_id"])
+                    }}
+                >
+                    <EditIcon style={{fontSize: "2rem"}} color="primary"/>
+                </IconButton>
+                <IconButton
+                    style={{marginRight: "auto"}}
+                    onClick={() => {
+                        handleDeleteProduct(prod["_id"])
+                    }}
+                >
+                    <DeleteIcon style={{fontSize: "2rem"}} color="primary"/>
+                </IconButton>
+            </CardActions>
+        </Card>
+    ))
 
     return (
         <Fragment>
-            {/* <Card className={productStyles.root}>
-                <CardActionArea>
-                    <CardMedia
-                        component="img"
-                        alt="product photo"
-                        height="170"
-                        image={product.img}
-                        title={product.title}
-                    />
-                    <CardContent>
-                        <Typography
-                            variant="h6"
-                            component="h2"
-                        >
-                            {
-                                product.title
-                            }
-                            {
-                                product.shopCategory === "MEDICINE" ?
-                                    <Typography variant="caption">
-                                        {product.group}
-                                    </Typography> : null
-                            }
-                            <Typography
-                                variant="button"
-                                color="primary"
-                                style={{display: "inline-block", width: "4rem"}}
-                            >
-                                TK. {product.price}
-                            </Typography>
-                        </Typography>
-                    </CardContent>
-                </CardActionArea>
-                <CardActions>
-                    <IconButton
-                        style={{ margin: "0 auto" }}
-                        onClick={() => product.handleQuantities({ ...product, quantity: 1 })}
-                    >
-                        <AddCircleIcon style={{fontSize: "3rem"}} color="primary"/>
-                    </IconButton>
-                </CardActions>
-            </Card> */}
-            <p>some</p>
+            { productList }
        </Fragment>
     )
 }

@@ -1,4 +1,6 @@
 import { useEffect, useState, } from "react";
+import { io } from "socket.io-client"
+import axios from "axios";
 import {
     Button,
     TableRow,
@@ -32,6 +34,13 @@ const useStyle = makeStyles(() => ({
 export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
     const cartStyles = useStyle()
     const [total, setTotal] = useState(0)
+
+    function handleOrder() {
+        console.log(orderedProduct, total)
+        axios.post('http://127.0.0.1:8000/order/new-order', {
+            
+        })
+    }
 
     useEffect(() => {
         let totalExp = 0
@@ -82,6 +91,7 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
                     variant="contained"
                     color="primary"
                     classes={{ root: cartStyles["submit-btn"] }}
+                    onClick={handleOrder}
                 >
                     Place Order
                 </Button>

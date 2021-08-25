@@ -2,23 +2,30 @@ import React, {
     useState,
     Fragment,
     useContext,
+    useEffect
 } from "react";
 import { useHistory } from "react-router-dom";
+import ReactMapGL, { Marker } from 'react-map-gl';
 import {
     Button,
     Paper,
     TextField,
     TextareaAutosize,
+    makeStyles,
+    InputLabel,
+    MenuItem,
+    FormControl,
+    Select,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
 } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core"
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import { TimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
 import axios from "axios";
-import jwt from "jsonwebtoken"
+// import jwt from "jsonwebtoken"
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import MainContext from "../../../store/main-context";
 
 const useStyle = makeStyles(theme => ({
@@ -62,11 +69,58 @@ export default function CreateNewShop() {
     const [dataSendingState, setDataSendingState] = useState(false)
     const [title, setTitle] = useState('');
     const [location, setLocation] = useState([])
+    const [locInfo, setLocInfo] = useState([])
     const [category, setcategory] = useState('');
     const [openingHour, setOpeningHour] = useState(new Date().toLocaleTimeString());
     const [closingHour, setClosingingHour] = useState(new Date().toLocaleTimeString());
     const [description, setDescription] = useState('');
-    
+    const [viewport, setViewport] = useState({
+        width: "100vw",
+        height: "100vh",
+        latitude: 23.7338028,
+        longitude: 90.3814551,
+        zoom: 12
+    });
+    const [openMap, setOpenMap] = useState(false);
+
+    useEffect(() => {
+        setViewport({
+            width: "100vw",
+            height: "100vh",
+            latitude: location[1],
+            longitude: location[0],
+            zoom: 15
+        })
+    }, [location])
+
+    function handleCoordinates(e) {
+        setLocation(e.lngLat)
+    }
+
+    const handleLocationChange = (event) => {
+        const strings = event.target.value.split(" ");
+        const trimedStrings = strings.map(str => str.trim())
+        const encodedString = trimedStrings.join("%20")
+
+        axios.get(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=pk.eyJ1IjoibW9zdGFmaWoxNjMiLCJhIjoiY2txemNtbTBxMWdzbTJubDN5djZoeWM2diJ9.7hx1WiV_RNDZOIkvVSipjw&country=BD`
+        ).then(res => {
+            if (res.status == 200) {
+                setLocInfo(res.data.features)  
+            }
+        }).catch(err => {
+            alert(err.message)
+        })
+    }
+
+    function handleOpenMap() {
+        setOpenMap(true)
+    }
+
+     const handleCloseMap = () => {
+        setOpenMap(false);
+    };
+
     const handleCategoryChange = (event) => {
         setcategory(event.target.value);
     };
@@ -74,18 +128,6 @@ export default function CreateNewShop() {
     const handleTitleChange = (event) => {
         setTitle(event.target.value)
     }
-
-    const handleLocationChange = (event) => {
-        const cord = event.target.value.split(",");
-        setLocation(cord)
-        
-        // {
-            //     "coordinates": {
-                //         "longitude": 90.3509005,
-                //         "latitude": 23.7916585
-                //     }
-                // }
-            }
             
     const handleDescriptionChange = (event) => {
         setDescription(event.target.value)
@@ -100,10 +142,7 @@ export default function CreateNewShop() {
             name: title,
             owner: mainCtx.user.id,
             location: {
-                coordinates: {
-                    longitude: location[1],
-                    latitude: location[0]
-                }
+                coordinates: [location[0], location[1]]
             },
             shopCategory: category,
             description: description,
@@ -116,9 +155,9 @@ export default function CreateNewShop() {
          setDataSendingState(false);
          if (res) {
              localStorage.setItem('shop', res.data)
-             const shop = jwt.decode(res.data)
+            //  const shop = jwt.decode(res.data)
              if (res.status == 201) {
-                history.push(`/shop/dashboard/${shop.sub}`)
+                history.push(`/my-shops`)
             }
          }
     }
@@ -126,6 +165,38 @@ export default function CreateNewShop() {
     return (
         <Fragment>
             <Paper classes={{ root: newShopStyles.paper }}>
+                <div>
+                    <Dialog
+                        fullScreen={true}
+                        open={openMap}
+                        onClose={handleCloseMap}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">{"Select Your Shop's Exact Location"}</DialogTitle>
+                        <DialogContent>
+                            <div>
+                                <ReactMapGL
+                                    {...viewport}
+                                    mapboxApiAccessToken="access token"
+                                    onViewportChange={nextViewport => setViewport(nextViewport)}
+                                    mapStyle="mapbox://styles/mostafij163/cksalt6m652ig17qpge35l96v"
+                                    onClick={handleCoordinates}
+                                >
+                                    <Marker
+                                        latitude={location[1]} 
+                                        longitude={location[0]}
+                                    >marker</Marker>
+                                </ReactMapGL>
+                            </div>
+                        </DialogContent>
+                        <DialogActions>
+                        <Button onClick={handleCloseMap} color="primary">
+                            Save
+                        </Button>
+                        </DialogActions>
+                    </Dialog>
+                    </div>
                 <form onSubmit={newShopFormSubmit}>
                     <TextField
                         className={newShopStyles.input}
@@ -136,14 +207,27 @@ export default function CreateNewShop() {
                         onChange={handleTitleChange}
                         required={true}
                     />
-                    <TextField
+                    <Autocomplete 
                         classes={{ root: newShopStyles.input }}
                         id="location"
-                        type="text"
-                        label="Select Shop Location" variant="outlined"
-                        onChange={handleLocationChange}
                         style={{ width: "65%" }}
+                        options={ locInfo }
+                        getOptionLabel={(option) => option.place_name}
+                        onChange={(event, value) => {
+                            if (value) {
+                                setLocation(value.geometry.coordinates)
+                                console.log(value.geometry.coordinates)
+                            }
+                        }}
+                        onClose={handleOpenMap}
                         required={true}
+                        renderInput={(params) => <TextField
+                            {...params}
+                            value={location}
+                            onChange={(event) => handleLocationChange(event)}
+                            label="Select Shop Location"
+                            variant="outlined"
+                        />}
                     />
                     <FormControl className={ newShopStyles["form-root"]}>
                         <InputLabel id="category">Shop Category</InputLabel>
@@ -196,7 +280,7 @@ export default function CreateNewShop() {
                             Create
                         </Button>
                     </div>
-                    </form>
+                </form>
             </Paper>
         </Fragment>
     )

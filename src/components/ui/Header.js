@@ -161,9 +161,9 @@ export default function Header() {
                                             classes={{ root: headerClasses.menuItem }}
                                             onClick={handleClose}
                                             component={Link}
-                                            to={`/dashboard`}
+                                            to={`/my-shops`}
                                         >
-                                            Dashboard
+                                            My Shops
                                         </MenuItem>
                                         <MenuItem
                                             classes={{ root: headerClasses.menuItem }}

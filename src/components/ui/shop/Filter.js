@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, } from "react"
 import {
     Accordion,
     AccordionSummary,
@@ -9,26 +9,60 @@ import {
     Checkbox,
     TextField,
     MenuItem,
+    makeStyles,
+    Button
 } from "@material-ui/core"
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore"
-import { Fragment } from "react";
 
-const shopCategory = [1];
+const useStyle = makeStyles(theme => ({
+    "btn-submit": {
+        ...theme["submit-btn"],
+        width: "17%",
+        float: "right",
+        margin: "2rem"
+    }
+}))
 
-export default function Filter({category, productCategories, manufacturers}) {
-    const [filterCategory, setFilterCategory] = React.useState("");
-    const [filterPrice, setFilterPrice] = React.useState(false);
+export default function Filter({
+    category,
+    productCategories,
+    manufacturers,
+    requestProducts
+}) {
+    const filterStyles = useStyle()
+    const [filterCategory, setFilterCategory] = useState("");
+    const [filterManufac, setFilterManuFac] = useState("")
+    const [filterPrice, setFilterPrice] = useState(false);
 
-    manufacturers = ["gentle park", "yellow", "arong"]
-    const prodCats = Array.from(productCategories);
-    const manufacs = Array.from(manufacturers);
-    
-    function handleFilterChange(e) {
-        setFilterCategory(e.target.value)
+    function handleFilterSubmit(event) {
+        event.preventDefault();
+        // TODO: 1. bulid query string
+        // TODO: 2. send request 
+
+        let query = {
+            category: filterCategory,
+            manufacturer: filterManufac,
+            sort: filterPrice
+        }
+
+        requestProducts(category, query)
+    }
+
+    function returnFilter(category) {
+        switch (category) {
+            case "FOOD": category
+                break;
+            case "MEDICINE": category
+                break;
+            case "CLOTHANDSHOE": category
+                break;
+            default:
+                break;
+        }
     }
 
     return (
-        <Accordion style={{marginTop: "2rem"}}>
+        <Accordion style={{ marginTop: "2rem" }}>
             <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="panel1a-content"
@@ -37,138 +71,77 @@ export default function Filter({category, productCategories, manufacturers}) {
                     <Typography variant="h6">Filter <i className="fas fa-filter" style={{color: "#f50057"}}></i></Typography>
             </AccordionSummary>
             <AccordionDetails>
-                <FormControl component="fieldset">
-                    <FormControlLabel
-                        style={{ margin: "0 1rem", }}
-                            value="price"
-                            control={<Checkbox checked={filterPrice} onClick={function () {
-                                setFilterPrice(!filterPrice)
-                            }} color="primary" />}
-                            label="Price"
-                            labelPlacement="end"
-                    />
-                    {
-                        shopCategory.map(() => {
-                            console.log(prodCats)
-                            switch (category) {
-                                case "FOOD": category
-                                    return (
-                                        <TextField
-                                            style={{ margin: "0 1rem", width: "7rem", }}
-                                            select
-                                            label="Category"
-                                            id="category"
-                                            value={filterCategory}
-                                            onChange={handleFilterChange}
-                                            key={category}
-                                        >
-                                            {
-                                                prodCats.map(cat => {
-                                                    return <MenuItem
-                                                        key={cat}
-                                                        value={cat}
-                                                    >
-                                                        {
-                                                            cat
-                                                        }
-                                                    </MenuItem>
-                                                })
-                                            }
-                                    </TextField>
-                                    )
-                                case "MEDICINE": category
-                                    return (
-                                        <TextField
-                                            style={{ margin: "0 1rem", width: "7rem",}}
-                                                select
-                                                label="Group"
-                                            id="category"
-                                            value={filterCategory}
-                                            onChange={handleFilterChange}
-                                        >
-                                            {
-                                                prodCats.map(cat => {
-                                                    return <MenuItem
-                                                        key={cat}
-                                                        value={cat}
-                                                    >
-                                                        {
-                                                            cat
-                                                        }
-                                                    </MenuItem>
-                                                })
-                                            }
-                                        </TextField>     
-                                    )
-                                case "CLOTHANDSHOE": category
-                                    return (
-                                        <Fragment>
-                                            <TextField
-                                                style={{ margin: "0 1rem", width: "7rem",}}
-                                                    select
-                                                    label="Category"
-                                                id="category"
-                                                value={filterCategory}
-                                                onChange={handleFilterChange}
-                                            >
-                                                {
-                                                    prodCats.map(cat => {
-                                                        return <MenuItem
-                                                            key={cat}
-                                                            value={cat}
-                                                        >
-                                                            {
-                                                                cat
-                                                            }
-                                                        </MenuItem>
-                                                    })
-                                                }
-                                            </TextField>
-                                            <TextField
-                                                style={{ margin: "0 1rem", width: "7rem",}}
-                                                    select
-                                                    label="Manufacturer"
-                                                id="category"
-                                                value={filterCategory}
-                                                onChange={handleFilterChange}
-                                            >
-                                                {
-                                                    manufacs.map(manufac => {
-                                                        return <MenuItem
-                                                            key={manufac}
-                                                            value={manufac}
-                                                        >
-                                                            {
-                                                                manufac
-                                                            }
-                                                        </MenuItem>
-                                                    })
-                                                }
-                                            </TextField>
-                                        </Fragment>
-                                    )
-                                default:
-                                    break;
-                            }
-                        })
-                    }
-
-                    {/* <TextField
-                        style={{ margin: "0 1rem", width: "7rem",}}
+                <form onSubmit={handleFilterSubmit} style={{width:"100%"}}>
+                    <FormControl component="fieldset">
+                        <FormControlLabel
+                            style={{ margin: "0 1rem", }}
+                                value="price"
+                                control={<Checkbox checked={filterPrice} onClick={function () {
+                                    setFilterPrice(!filterPrice)
+                                }} color="primary" />}
+                                label="Price"
+                                labelPlacement="end"
+                        />
+                        <TextField
+                            style={{ margin: "0 1rem", width: "7rem", }}
                             select
-                            label="Category"
-                        id="category"
-                        value={filterCategory}
-                        onChange={handleFilterChange}
+                            label={category === "MEDICINE" ? "Group" : "Category"}
+                            id="category"
+                            value={filterCategory}
+                            onChange={(event) => {
+                                setFilterCategory(event.target.value)
+                            }}
+                            key={category}
                         >
-                            <MenuItem value="veg">Vegetarian</MenuItem>
-                            <MenuItem value="nonveg">Non Vegetarian</MenuItem>
-                            <MenuItem value="fastfood">Fast Food</MenuItem>
-                            <MenuItem value="chinese">Chinese</MenuItem>
-                            <MenuItem value="bangla">Bangladesh</MenuItem>
-                            <MenuItem value="rice">Rice Dishes</MenuItem>
-                        </TextField> */}
-                </FormControl>
+                            {
+                                productCategories.map(cat => {
+                                    return <MenuItem
+                                        key={cat}
+                                        value={cat}
+                                    >
+                                        {
+                                            cat
+                                        }
+                                    </MenuItem>
+                                })
+                            }
+                        </TextField>
+                        <TextField
+                            style={{ margin: "0 1rem", width: "7rem", }}
+                            select
+                            label="Manufacturer"
+                            id="category"
+                            value={filterManufac}
+                            onChange={(event) => {
+                                setFilterManuFac(event.target.value)
+                            }}
+                        >
+                            {
+                                manufacturers.map(manufac => {
+                                    return <MenuItem
+                                        key={manufac}
+                                        value={manufac}
+                                    >
+                                        {
+                                            manufac
+                                        }
+                                    </MenuItem>
+                                })
+                            }
+                        </TextField>
+                        {
+                            returnFilter(category)
+                        }
+                    </FormControl>
+                    <Button
+                        className={filterStyles["btn-submit"]}
+                        color="primary"
+                        variant="contained"
+                        type="submit"
+                    >
+                        Filter Products
+                    </Button>
+                </form>
             </AccordionDetails>
         </Accordion>
     )

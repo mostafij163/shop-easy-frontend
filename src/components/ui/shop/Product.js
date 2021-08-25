@@ -1,4 +1,4 @@
-import React, { useEffect, Fragment, } from "react";
+import React, { Fragment, } from "react";
 import {
     CardMedia,
     CardContent,
@@ -10,22 +10,8 @@ import {
     Grid,
 } from "@material-ui/core";
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import axios from "axios"
-// import { RemoveCircle } from "@material-ui/icons";
-// import MainContext from "../../../store/main-context";
 
-export default function Product({shop, handleProducts, products}) {
-
-    useEffect(() => {
-        axios.post(
-            `http://127.0.0.1:8000/shop/filter-products/${shop["_id"]}`,
-            {
-              category: shop.shopCategory 
-            }
-        ).then(res => {
-            handleProducts(res.data)
-        })
-    }, [shop, handleProducts])
+export default function Product({ products, handleQuantities }) {
 
     return (
         <Fragment>
@@ -69,7 +55,7 @@ export default function Product({shop, handleProducts, products}) {
                                 <CardActions>
                                     <IconButton
                                         style={{ margin: "0 auto" }}
-                                        onClick={() => product.handleQuantities({ ...product, quantity: 1 })}
+                                        onClick={() => handleQuantities({ ...product, quantity: 1 })}
                                     >
                                         <AddCircleIcon style={{ fontSize: "3rem" }} color="primary" />
                                     </IconButton>

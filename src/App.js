@@ -15,6 +15,9 @@ import CreateNewShop from "./components/ui/seller/CreateNewShop";
 import DeliveryBoyDashboard from "./components/DeliveryBoyDashBoard"
 import MainContext from "./store/main-context";
 import SellerSignUp from "./components/ui/seller/SignUp"
+import LoginToShop from "./components/ui/seller/LoginToShop";
+import MyMap from "./components/map"
+import ShopFound from "./components/ui/ShopFound"
 
 export default function App() {
   const [loginStatus, setLoginStatus] = useState(false);
@@ -33,6 +36,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('user');
     setUserJwt('')
+    setLoginStatus(false)
   }
 
   useEffect(() => {
@@ -76,11 +80,14 @@ export default function App() {
                 <Route path="/login" exact component={Login}/>
                 <Route path="/order-history" exact component={ OrderHistory } />
                 <Route path="/me" exact></Route>
-                <Route path="/" exact component={Home} />
+                <Route path="/shops" exact component={ShopFound} />
                 <Route path="/shop/:shopId" exact component={Shop} />
                 <Route path="/seller/new-shop" exact component={CreateNewShop} />
                 <Route path="/seller/sign-up" exact component={SellerSignUp} />
                 <Route path="/seller/login" exact component={SellerLogin} />
+                <Route path="/my-shops" exact component={LoginToShop} />
+                <Route path="/map" component={MyMap}/>
+                <Route path="/" exact component={Home} />
               </Switch>
               <Route path="/dashboard" component={ShopDashboard} />
               <Route path="/deliveryman/dashboard/:deliverymanId" component={DeliveryBoyDashboard}/>
