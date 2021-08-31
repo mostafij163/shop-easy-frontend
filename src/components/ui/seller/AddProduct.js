@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useContext } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import {
     Paper,
     makeStyles,
@@ -7,7 +7,6 @@ import {
     TextareaAutosize,
 } from "@material-ui/core"
 import axios from "axios"
-import MainContext from "../../../store/main-context";
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -28,7 +27,6 @@ const useStyle = makeStyles(theme => ({
 
 export default function AddProduct({ shopCategory }) {
     const addProductStyles = useStyle()
-    const mainCtx = useContext(MainContext)
     const [title, setTitle] = useState("")
     const [price, setPrice] = useState(1)
     const [manufacturer, setManufacturer] = useState("")
@@ -36,10 +34,22 @@ export default function AddProduct({ shopCategory }) {
     const [color, setColor] = useState([])
     const [availableSize, setAvailableSize] = useState([])
     const [description, setDescription] = useState("")
+    const [userJwt, setUserJwt] = useState("")
+    const [shopJwt, setShopJwt] = useState("")
+
+    useEffect(() => {
+        const userToken = localStorage.getItem('user')
+        if (userToken) {
+        setUserJwt(userToken)
+        }
+        const shopToken = localStorage.getItem('shop')
+        if (shopToken) {
+        setShopJwt(shopToken)
+        }
+    }, [])
 
     const handleAddProductForm = (e) => {
         e.preventDefault();
-        const shopJwt = localStorage.getItem('shop');
         const data = {
             title,
             price,
@@ -50,10 +60,11 @@ export default function AddProduct({ shopCategory }) {
             description
         }
         axios.post(
-            `http://127.0.0.1:8000/shop/add-new-product/${mainCtx.shop.sub}`,
+            `http://127.0.0.1:8000/shop/product`,
             data,
             {
                 headers: {
+                    Authorization: `Bearer ${userJwt}`,
                     'X-shop-jwt': `Bearer ${shopJwt}` 
                 }
             }

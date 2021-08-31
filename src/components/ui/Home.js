@@ -18,6 +18,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete"
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { useSpring, animated } from 'react-spring'
 import axios from "axios"
+import { mapboxApiKey } from "../../store/map-box";
 
 const Fade = forwardRef(function Fade(props, ref) {
   const { in: open, children, onEnter, onExited, ...other } = props;
@@ -90,7 +91,7 @@ export default function Home() {
         const encodedString = trimedStrings.join("%20")
 
         axios.get(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=   &country=BD`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=${mapboxApiKey}&country=BD`
         ).then(res => {
             if (res.status == 200) {
                 setArea(res.data.features)  

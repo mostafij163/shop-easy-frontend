@@ -1,4 +1,4 @@
-import React, { useEffect, Fragment, } from "react";
+import React, { useEffect, Fragment, useState, } from "react";
 import {Link, } from "react-router-dom"
 import {
     CardMedia,
@@ -26,11 +26,20 @@ export default function Product({
     handleDeleteProduct
 }) {
     const productStyles = useStyle()
+    const [userJwt, setUserJwt] = useState("")
+    const [shopJwt, setShopJwt] = useState("")
 
     useEffect(() => {
-        fetchProducts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        const userToken = localStorage.getItem("user")
+        const shopToken = localStorage.getItem("shop")
+        setUserJwt(userToken)
+        setShopJwt(shopToken)
     }, [])
+
+    useEffect(() => {
+        fetchProducts(userJwt, shopJwt)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userJwt, shopJwt])
 
     const productList = products.map((prod) => (
         <Card key={ prod["_id"] } className={productStyles.root}>
@@ -72,7 +81,7 @@ export default function Product({
                 <IconButton
                     style={{marginRight: "auto"}}
                     onClick={() => {
-                        handleDeleteProduct(prod["_id"])
+                        handleDeleteProduct(userJwt, shopJwt, prod["_id"])
                     }}
                 >
                     <DeleteIcon style={{fontSize: "2rem"}} color="primary"/>

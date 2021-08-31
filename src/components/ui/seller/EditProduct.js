@@ -37,6 +37,15 @@ export default function EditProduct({ product, shopCategory }) {
     const [color, setColor] = useState([])
     const [availableSize, setAvilableSize] = useState([])
     const [description, setDescription] = useState("")
+    const [userJwt, setUserJwt] = useState("")
+    const [shopJwt, setShopJwt] = useState("")
+
+    useEffect(() => {
+        const userToken = localStorage.getItem("user")
+        const shopToken = localStorage.getItem("shop")
+        setUserJwt(userToken)
+        setShopJwt(shopToken)
+    }, [])
 
     useEffect(() => {
         setid(product["_id"])
@@ -51,29 +60,31 @@ export default function EditProduct({ product, shopCategory }) {
 
     const handleEditProductForm = (e) => {
         e.preventDefault();
-        const shopJwt = localStorage.getItem('shop');
-        const data = {
-            title,
-            price,
-            manufacturer,
-            category,
-            color,
-            availableSize,
-            description
-        }
-        axios.post(
-            `http://127.0.0.1:8000/shop/product/${id}`,
-            data,
-            {
-                headers: {
-                    'X-shop-jwt': `Bearer ${shopJwt}` 
-                }
+        if (userJwt && shopJwt) {
+            const data = {
+                title,
+                price,
+                manufacturer,
+                category,
+                color,
+                availableSize,
+                description
             }
-        ).then(res => {
-            if(res.status == 201) history.push('/dashboard/products/')
-        }).catch(err => {
-            alert(err.message)
-        })
+            axios.patch(
+                `http://127.0.0.1:8000/shop/product/${id}`,
+                data,
+                {
+                    headers: {
+                        Authorization: `Bearer ${userJwt}`,
+                        'x-shop-jwt': `Bearer ${shopJwt}` 
+                    }
+                }
+            ).then(res => {
+                if(res.status == 200) history.push('/dashboard/products/')
+            }).catch(err => {
+                alert(err.message)
+            })
+        }
     }
 
     return (

@@ -27,6 +27,7 @@ import axios from "axios";
 // import jwt from "jsonwebtoken"
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import MainContext from "../../../store/main-context";
+import { mapboxApiKey } from "../../../store/map-box";
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -66,6 +67,7 @@ export default function CreateNewShop() {
     const newShopStyles = useStyle();
     const mainCtx = useContext(MainContext)
     const history = useHistory()
+    const [userJwt, setUserJwt] = useState('');
     const [dataSendingState, setDataSendingState] = useState(false)
     const [title, setTitle] = useState('');
     const [location, setLocation] = useState([])
@@ -93,6 +95,13 @@ export default function CreateNewShop() {
         })
     }, [location])
 
+    useEffect(() =>{
+        const userToken = localStorage.getItem('user')
+        if (userToken) {
+            setUserJwt(userToken)
+        }
+    }, [])
+
     function handleCoordinates(e) {
         setLocation(e.lngLat)
     }
@@ -103,7 +112,7 @@ export default function CreateNewShop() {
         const encodedString = trimedStrings.join("%20")
 
         axios.get(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=   &country=BD`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=${mapboxApiKey}&country=BD`
         ).then(res => {
             if (res.status == 200) {
                 setLocInfo(res.data.features)  
@@ -135,31 +144,36 @@ export default function CreateNewShop() {
             
      const newShopFormSubmit = async (event) => {
          event.preventDefault();
-         setDataSendingState(true)
-         let res;
-        try {
-            res = await axios.post("http://127.0.0.1:8000/shop/new-shop", {
-            name: title,
-            owner: mainCtx.user.id,
-            location: {
-                coordinates: [location[0], location[1]]
-            },
-            shopCategory: category,
-            description: description,
-            openingHour: openingHour,
-            closingHour: closingHour
-        })
-        } catch (err) {
-            setDataSendingState(false)
-         }
-         setDataSendingState(false);
-         if (res) {
-             localStorage.setItem('shop', res.data)
-            //  const shop = jwt.decode(res.data)
-             if (res.status == 201) {
-                history.push(`/my-shops`)
+         if (userJwt) {
+            setDataSendingState(true)
+            let res;
+            try {
+                res = await axios.post("http://127.0.0.1:8000/shop/new-shop", {
+                name: title,
+                owner: mainCtx.user.id,
+                location: {
+                    coordinates: [location[0], location[1]]
+                },
+                shopCategory: category,
+                description: description,
+                openingHour: openingHour,
+                closingHour: closingHour
+                }, {
+                    headers: {
+                    Authorization: `Bearer ${userJwt}`
+                }
+            })
+            } catch (err) {
+                setDataSendingState(false)
             }
-         }
+            setDataSendingState(false);
+            if (res) {
+                localStorage.setItem('shop', res.data)
+                if (res.status == 201) {
+                    history.push(`/my-shops`)
+                }
+            }
+        }
     }
     
     return (
@@ -178,7 +192,7 @@ export default function CreateNewShop() {
                             <div>
                                 <ReactMapGL
                                     {...viewport}
-                                    mapboxApiAccessToken="access token"
+                                    mapboxApiAccessToken={ mapboxApiKey}
                                     onViewportChange={nextViewport => setViewport(nextViewport)}
                                     mapStyle="mapbox://styles/mostafij163/cksalt6m652ig17qpge35l96v"
                                     onClick={handleCoordinates}

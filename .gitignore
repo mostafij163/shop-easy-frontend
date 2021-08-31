@@ -11,6 +11,9 @@
 # production
 /build
 
+# token
+/src/store/map-box.js
+
 # misc
 .DS_Store
 .env.local

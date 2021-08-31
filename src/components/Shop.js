@@ -35,14 +35,21 @@ export default function Shop() {
     const [products, setProducts] = useState([])
     const [productCategories, setProductCategories] = useState([])
     const [productManuFacs, setProductManuFacs] = useState([])
+    const [orderedProduct, setorderedProduct] = useState([]);
+
+    useEffect(() => {
+        const orderJson = localStorage.getItem("order")
+        if (orderJson) {
+            const order = JSON.parse(orderJson);
+            setorderedProduct([...order])
+        }
+    }, [])
 
     useEffect(() => {
        axios.get(`http://127.0.0.1:8000/shop/${id}`).then(res => {
            if (res) {
-                console.log(res)
                 if (res.status == 200) {
                     setShop(res.data)
-                    console.log(res.data)
                     requestProducts(res.data.shopCategory)
                 }
             }
@@ -50,10 +57,10 @@ export default function Shop() {
         .catch(err => {
             console.log(err)
         })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
 
     function requestProducts(shopCategory, query) {
-        console.log(shopCategory, query)
         if (query) {
             const { category, manufacturer, sort } = query
             axios.get(
@@ -86,22 +93,23 @@ export default function Shop() {
         }
     }
 
-    const [orderedProduct, setorderedProduct] = useState([]);
-
     function handleQuantities(product) {
         console.log(product)
         console.log(orderedProduct)
         const existingProduct = orderedProduct.find(prod => prod["_id"] === product["_id"])
         if (!existingProduct) {
-            setorderedProduct([...orderedProduct, product])
+            const updatedProduct = [...orderedProduct, product]
+            localStorage.setItem("order",JSON.stringify(updatedProduct))
+            setorderedProduct(updatedProduct)
         } else {
-            const updatedState = orderedProduct.map(product => {
+            const updatedProduct = orderedProduct.map(product => {
                 if (product["_id"] === existingProduct["_id"]) {
                     product.quantity += 1
                 }
                 return product
             })
-            setorderedProduct(updatedState)
+            localStorage.setItem("order",JSON.stringify(updatedProduct))
+            setorderedProduct(updatedProduct)
         }
     }
 
@@ -113,11 +121,13 @@ export default function Shop() {
                 }
                 return product;
             })
+            localStorage.setItem("order", JSON.stringify(updatedOrderedProduct))
             setorderedProduct(updatedOrderedProduct)
         } else {
             const productToRemove = orderedProduct.find(product => product["_id"] === prod["_id"])
-            const updatedProducts = orderedProduct.filter((product) => product["_id"] !== productToRemove["_id"])
-            setorderedProduct(updatedProducts)
+            const updatedOrderedProduct = orderedProduct.filter((product) => product["_id"] !== productToRemove["_id"])
+            localStorage.setItem("order", JSON.stringify(updatedOrderedProduct))
+            setorderedProduct(updatedOrderedProduct)
         }
     }
 
@@ -142,7 +152,6 @@ export default function Shop() {
                             </Typography>
                         </CardContent>
                     </CardActionArea>
-                    { console.log(shop)}
                     <Filter
                         category={shop.shopCategory}
                         productCategories={productCategories}

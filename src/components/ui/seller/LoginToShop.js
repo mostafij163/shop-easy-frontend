@@ -3,7 +3,6 @@ import { useState, Fragment, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { Paper, FormControl, InputLabel, Select, MenuItem, makeStyles } from "@material-ui/core";
 import axios from "axios"
-import * as jwt from "jsonwebtoken"
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -22,16 +21,28 @@ export default function LoginToShop() {
     const history = useHistory()
     const [shops, setShops] = useState([])
     const [shop, setShop] = useState("")
+    const [userJwt, setUserJwt] = useState("")
 
     useEffect(() => {
-        const userJwt = localStorage.getItem("user")
-        const decodedToken = jwt.decode(userJwt)
-        axios.get(`http://127.0.0.1:8000/shop/my-shops/${decodedToken.sub}`).then(res => {
-            if(res.status == 200) setShops(res.data)
-        }).catch(err => {
-            alert(err.message)
-        })
+        const jwt = localStorage.getItem("user")
+        if (jwt) {
+            setUserJwt(jwt)
+        }
     }, [])
+
+    useEffect(() => {
+        if (userJwt) {
+            axios.get(`http://127.0.0.1:8000/shop/my-shops`, {
+                headers: {
+                    Authorization: `Bearer ${userJwt}`
+                }
+            }).then(res => {
+                if(res.status == 200) setShops(res.data)
+            }).catch(err => {
+                alert(err.message)
+            })
+        }
+    }, [userJwt])
 
     function handleShopLogin(e) {
         setShop(e.target.value)

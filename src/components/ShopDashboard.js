@@ -23,7 +23,6 @@ import SellerShop from "./ui/seller/SellerShop"
 import MainContext from "../store/main-context";
 import Product from "./ui/seller/Product"
 import EditProduct from "./ui/seller/EditProduct";
-// import LoginToShop from "./ui/seller/LoginToShop"
 
 const drawerWidth = 240;
 
@@ -74,22 +73,58 @@ const useStyle = makeStyles(theme => ({
 export default function ShopDashboard(props) {
   const dashboardStyles = useStyle()
   const mainCtx = useContext(MainContext);
-  const [shop, setShop] = useState({})
+
+  // closingHour: "4:01:47 PM"
+// createdAt: "2021-08-15T10:02:17.105Z"
+// description: "a medicine shop at opposite of national heart foundation hospital"
+// location: {type: "Point", _id: "6118e62978b4f52128aace7f", coordinates: {…}}
+// name: "mirpur medicine store"
+// openingHour: "4:01:47 PM"
+// owner: "6118ab3378b4f52128aace7d"
+// shopCategory: "MEDICINE"
+// updatedAt: "2021-08-15T10:02:17.105Z"
+// __v: 0
+  const [shop, setShop] = useState({
+    name: "",
+    owner: "",
+    shopCategory: "",
+    description: "",
+    location: {
+      type: "",
+      coordinates: []
+    },
+    openingHour: "",
+    closingHour: ""
+  })
   const [newOrders, setNewOrders] = useState(0)
   const [products, setProducts] = useState([])
   const [editProduct, setEditProduct] = useState({})
   const [orders, setOrders] = useState([])
+  const [userJwt, setUserJwt] = useState("")
 
   useEffect(() => {
-    axios.get(`
-    http://127.0.0.1:8000/shop/${props.location.state ? props.location.state.id : mainCtx.shop.sub}`
-    ).then(res => {
-      setShop(res.data.shop);
-      localStorage.setItem('shop', res.data.jwt)
-    })
-    .catch(err => {
-      console.log(err)
-    })
+    const userToken = localStorage.getItem('user')
+    if (userToken) {
+      setUserJwt(userToken)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (userJwt) {
+      axios.get(`
+        http://127.0.0.1:8000/shop/login/${props.location.state ? props.location.state.id : mainCtx.shop.sub}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userJwt}`
+          }
+        }
+      ).then(res => {
+        setShop(res.data.shop);
+        localStorage.setItem('shop', res.data.jwt)
+      })
+      .catch(err => {
+        console.log(err)
+      })
     
         setOrders([...orders,
             {
@@ -135,15 +170,17 @@ export default function ShopDashboard(props) {
                 ]
             }
         ])
-  }, [mainCtx])
+    }
+  }, [mainCtx, props.location.state, userJwt])
   
-  function fetchProducts() {
-    const shopJwt = localStorage.getItem('shop')
-        axios.get(
-        `http://127.0.0.1:8000/shop/products`,
+  function fetchProducts(userJwt, shopJwt) {
+    if (userJwt && shopJwt) {
+      axios.get(
+        `http://127.0.0.1:8000/shop/product`,
         {
-            headers: {
-                'X-shop-jwt': `Bearer ${shopJwt}` 
+          headers: {
+              Authorization: `Bearer ${userJwt}`,
+              'x-shop-jwt': `Bearer ${shopJwt}` 
             }
         }
         ).then(res => {
@@ -151,6 +188,7 @@ export default function ShopDashboard(props) {
             setProducts(res.data)
             }
         })
+    }
   }
 
   function handleEditProduct(productId) {
@@ -158,14 +196,14 @@ export default function ShopDashboard(props) {
     setEditProduct(productToEdit)
   }
 
-  function handleDeleteProduct(productId) {
-    const shopJwt = localStorage.getItem('shop')
+  function handleDeleteProduct(userJwt, shopJwt, productId) {
     axios.delete(`http://127.0.0.1:8000/shop/product/${productId}`,
-            {
-                headers: {
-                    'X-shop-jwt': `Bearer ${shopJwt}` 
-                }
-            }
+      {
+        headers: {
+            Authorization: `Bearer ${userJwt}`,
+            'x-shop-jwt': `Bearer ${shopJwt}` 
+          }
+      }
     ).then(res => {
       if (res.status == 200) {
           const productAfterDelete = products.filter(prod => {
@@ -207,7 +245,7 @@ export default function ShopDashboard(props) {
           {
             text: "Orders",
             icon: <Badge
-              badgeContent={newOrders}
+              badgeContent={1}
               color="error"
             >
               <i className={`fas fa-cart-plus ${dashboardStyles["drawer-icon"]}`}></i>
