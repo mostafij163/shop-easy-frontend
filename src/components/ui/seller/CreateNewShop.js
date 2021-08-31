@@ -103,7 +103,7 @@ export default function CreateNewShop() {
         const encodedString = trimedStrings.join("%20")
 
         axios.get(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=pk.eyJ1IjoibW9zdGFmaWoxNjMiLCJhIjoiY2txemNtbTBxMWdzbTJubDN5djZoeWM2diJ9.7hx1WiV_RNDZOIkvVSipjw&country=BD`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedString}.json?access_token=   &country=BD`
         ).then(res => {
             if (res.status == 200) {
                 setLocInfo(res.data.features)  
