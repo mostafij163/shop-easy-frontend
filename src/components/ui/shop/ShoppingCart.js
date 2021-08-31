@@ -21,6 +21,7 @@ import { RemoveCircle } from "@material-ui/icons";
 import ReactMapGL, { Marker } from 'react-map-gl';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { mapboxApiKey } from "../../../store/map-box";
+import jwt from "jsonwebtoken"
 
 const useStyle = makeStyles(() => ({
     paper: {
@@ -47,7 +48,6 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
     const cartStyles = useStyle()
     const [total, setTotal] = useState(0)
     const [userJwt, setUserJwt] = useState("")
-    const [shopJwt, setShopJwt] = useState("")
     const [location, setLocation] = useState([])
     const [locInfo, setLocInfo] = useState([])
     const [viewport, setViewport] = useState({
@@ -61,9 +61,7 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
 
     useEffect(() => {
         const userToken = localStorage.getItem("user")
-        const shopToken = localStorage.getItem("shop")
         setUserJwt(userToken)
-        setShopJwt(shopToken)
     }, [])
 
     useEffect(() => {
@@ -106,18 +104,42 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
 
     function handleOrder() {
         console.log(orderedProduct, total)
-        const productList = orderedProduct.map(prod => {
-            return {
-                productId: prod["_id"],
-                title: prod.title,
-                price: prod.title,
-                quantity: prod.quantity,
-                shop: prod.shop,
+        if (userJwt && location.length && orderedProduct.length) {
+            const decodedUser = jwt.decode(userJwt)
+            const productList = orderedProduct.map(prod => {
+                return {
+                    productId: prod["_id"],
+                    title: prod.title,
+                    price: prod.title,
+                    quantity: prod.quantity,
+                    shop: prod.shop,
+                }
+            })
+
+            const orderData = {
+                customer: decodedUser.sub,
+                customerName: decodedUser.name,
+                productList: productList,
+                deliveryLocation: {
+                    coordinates: [location[0], location[1]]
+                },
+                total: total
             }
-        })
-        // axios.post('http://127.0.0.1:8000/order/new-order', {
-            
-        // })
+
+            axios.post('http://127.0.0.1:8000/order/new-order', orderData, {
+                headers: {
+                    Authorization: `Bearer ${userJwt}`
+                }
+            })
+            .then(res => {
+                if (res.status === 201) {
+                    localStorage.removeItem("order");
+                    alert("Order placed to shops")
+                }
+            }).catch(err => {
+                alert(err.message)
+            })
+        }
     }
 
     useEffect(() => {
