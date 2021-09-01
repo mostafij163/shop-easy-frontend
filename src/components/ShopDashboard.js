@@ -23,6 +23,7 @@ import SellerShop from "./ui/seller/SellerShop"
 import MainContext from "../store/main-context";
 import Product from "./ui/seller/Product"
 import EditProduct from "./ui/seller/EditProduct";
+import { io } from "socket.io-client"
 
 const drawerWidth = 240;
 
@@ -73,17 +74,6 @@ const useStyle = makeStyles(theme => ({
 export default function ShopDashboard(props) {
   const dashboardStyles = useStyle()
   const mainCtx = useContext(MainContext);
-
-  // closingHour: "4:01:47 PM"
-// createdAt: "2021-08-15T10:02:17.105Z"
-// description: "a medicine shop at opposite of national heart foundation hospital"
-// location: {type: "Point", _id: "6118e62978b4f52128aace7f", coordinates: {…}}
-// name: "mirpur medicine store"
-// openingHour: "4:01:47 PM"
-// owner: "6118ab3378b4f52128aace7d"
-// shopCategory: "MEDICINE"
-// updatedAt: "2021-08-15T10:02:17.105Z"
-// __v: 0
   const [shop, setShop] = useState({
     name: "",
     owner: "",
@@ -96,17 +86,20 @@ export default function ShopDashboard(props) {
     openingHour: "",
     closingHour: ""
   })
-  const [newOrders, setNewOrders] = useState(0)
+  const [newOrders, setNewOrders] = useState("")
   const [products, setProducts] = useState([])
   const [editProduct, setEditProduct] = useState({})
   const [orders, setOrders] = useState([])
   const [userJwt, setUserJwt] = useState("")
+  const [shopJwt, setShopJwt] = useState("");
 
   useEffect(() => {
     const userToken = localStorage.getItem('user')
     if (userToken) {
       setUserJwt(userToken)
     }
+    const shopToken = localStorage.getItem("shop");
+    setShopJwt(shopToken);
   }, [])
 
   useEffect(() => {
@@ -125,53 +118,29 @@ export default function ShopDashboard(props) {
       .catch(err => {
         console.log(err)
       })
-    
-        setOrders([...orders,
-            {
-                orderId: "1",
-                from: "Mostafijur rahman",
-                orderedTime: Date.now(),
-                deliveryStatus: false,
-                total: 2000,
-                products: [
-                    {
-                        title: "burger",
-                        price: 290,
-                        quantity: 2,
-                        shopid: "1",
-                    },
-                    {
-                        title: "cheezy pizza",
-                        price: 500,
-                        quantity: 2,
-                        shopid: "1",
-                    },
-                ]
-            },
-            {
-                orderId: "3",
-                from: "Hamza rahman",
-                orderedTime: Date.now(),
-                deliveryStatus: false,
-                total: 2000,
-                products: [
-                    {
-                        title: "burger",
-                        price: 290,
-                        quantity: 1,
-                        shopid: "1",
-                    },
-                    {
-                        title: "cheezy pizza",
-                        price: 500,
-                        quantity: 1,
-                        shopid: "1",
-                    },
-                ]
-            }
-        ])
     }
   }, [mainCtx, props.location.state, userJwt])
+
+  useEffect(() => {
+    if (userJwt && shopJwt) {
+      const socket = io('http://localhost:8000', {
+        extraHeaders: {
+          Authorization: `Bearer ${userJwt}`,
+          'x-shop-jwt': `Bearer ${shopJwt}`
+        }
+      })
+      socket.on('new-order', function (orderData) {
+        setNewOrders(orderData)
+      })
+    }
+  }, [userJwt, shopJwt])
+
+  useEffect(() => {
+    if (newOrders) {
+      setOrders([...orders, newOrders])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newOrders])
   
   function fetchProducts(userJwt, shopJwt) {
     if (userJwt && shopJwt) {
@@ -219,10 +188,10 @@ export default function ShopDashboard(props) {
     })
   }
 
-    const handleDeliveryStatus = (order) => {
+    const handleDeliveryStatus = (event, order) => {
         const updatedOrders = orders.map(o => {
-            if (o.orderId === order.orderId) {
-                o.deliveryStatus = !o.deliveryStatus
+            if (o["_id"] === order["_id"]) {
+                o.deliveryStatus = event.target.checked ? "delivered" : "pending"
             }
             return o;
         })
@@ -312,7 +281,7 @@ export default function ShopDashboard(props) {
     const container = window !== undefined ? () => window().document.body : undefined;
 
     return (
-        <div className={dashboardStyles.root}>
+        <div className={dashboardStyles.root}> {console.log(orders)}
       <CssBaseline />
       <AppBar position="fixed" className={dashboardStyles.appBar}>
         <Toolbar>

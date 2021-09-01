@@ -1,5 +1,6 @@
-import React, { useContext, } from "react"
+import { useContext, useState, useEffect} from "react"
 import { Link, useHistory } from "react-router-dom";
+import jwt from "jsonwebtoken"
 import {
     useScrollTrigger,
     AppBar,
@@ -75,11 +76,16 @@ const useStyle = makeStyles( theme => ({
 }))
 
 export default function Header() {
+    const headerClasses = useStyle();
     const mainCtx = useContext(MainContext);
     const history = useHistory()
-    
-    const headerClasses = useStyle();
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [userJwt, setUserJwt] = useState("")
+    const [anchorEl, setAnchorEl] = useState(null);
+
+    useEffect(() => {
+        setUserJwt(localStorage.getItem('user'))
+    }, [])
+
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -93,6 +99,62 @@ export default function Header() {
         mainCtx.handleLogout()
         history.push('/')
     }
+
+    const menuItems = function () {
+        if (mainCtx.user.role === "seller") {
+            return (
+                <div>
+                    <MenuItem
+                        classes={{ root: headerClasses.menuItem }}
+                        onClick={handleClose}
+                        component={Link}
+                        to={`/my-shops`}
+                    >
+                        My Shops
+                    </MenuItem>
+                    <MenuItem
+                        classes={{ root: headerClasses.menuItem }}
+                        onClick={handleClose}
+                        component={Link}
+                        to="/seller/new-shop"
+                    >
+                        Create Shop
+                    </MenuItem>
+                </div>
+            )
+        } else if (mainCtx.user.role === "customer") {
+            return (
+                <div>
+                    <MenuItem
+                        classes={{root: headerClasses.menuItem}}
+                        onClick={handleClose}
+                        component={Link}
+                        to="/order-history"
+                        >My Orders</MenuItem>
+                    <MenuItem
+                        classes={{root: headerClasses.menuItem}}
+                        onClick={handleClose}
+                        component={Link}
+                        to="/me"
+                    >My account</MenuItem>
+                </div>
+            )
+        } else if (mainCtx.user.role === "deliveryman") {
+            return (
+                <div>
+                    <MenuItem
+                        classes={{ root: headerClasses.menuItem }}
+                        onClick={handleClose}
+                        component={Link}
+                        to={`/deliveryman/dashboard`}
+                    >
+                        Dashboard
+                    </MenuItem>
+                </div>
+            )
+        }
+    }
+
     return (
         <div>
             <HideOnScroll>
@@ -155,40 +217,7 @@ export default function Header() {
                             elevation={0}
                         >
                             {
-                                mainCtx.user.role === "seller" ?
-                                    <div>
-                                        <MenuItem
-                                            classes={{ root: headerClasses.menuItem }}
-                                            onClick={handleClose}
-                                            component={Link}
-                                            to={`/my-shops`}
-                                        >
-                                            My Shops
-                                        </MenuItem>
-                                        <MenuItem
-                                            classes={{ root: headerClasses.menuItem }}
-                                            onClick={handleClose}
-                                            component={Link}
-                                            to="/seller/new-shop"
-                                        >
-                                            Create Shop
-                                        </MenuItem>
-                                    </div>
-                                    :
-                                    <div>
-                                        <MenuItem
-                                            classes={{root: headerClasses.menuItem}}
-                                            onClick={handleClose}
-                                            component={Link}
-                                            to="/order-history"
-                                            >My Orders</MenuItem>
-                                        <MenuItem
-                                            classes={{root: headerClasses.menuItem}}
-                                            onClick={handleClose}
-                                            component={Link}
-                                            to="/me"
-                                        >My account</MenuItem>
-                                    </div>
+                                menuItems()
                             }
                             
                             <MenuItem

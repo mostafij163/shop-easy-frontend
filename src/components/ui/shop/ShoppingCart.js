@@ -110,7 +110,7 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
                 return {
                     productId: prod["_id"],
                     title: prod.title,
-                    price: prod.title,
+                    price: prod.price,
                     quantity: prod.quantity,
                     shop: prod.shop,
                 }

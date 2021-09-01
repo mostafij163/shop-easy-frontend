@@ -12,12 +12,13 @@ import SellerLogin from "./components/ui/seller/Login"
 import Signup from "./components/ui/customer/SignUp";
 import Shop from "./components/Shop";
 import CreateNewShop from "./components/ui/seller/CreateNewShop";
-import DeliveryBoyDashboard from "./components/DeliveryBoyDashBoard"
+import DeliveryBoyDashboard from "./components/DeliverymanDashBoard"
 import MainContext from "./store/main-context";
 import SellerSignUp from "./components/ui/seller/SignUp"
 import LoginToShop from "./components/ui/seller/LoginToShop";
-import MyMap from "./components/map"
 import ShopFound from "./components/ui/ShopFound"
+import DeliveryManSignUp from "./components/ui/deliveryman/DeliverymanSignUp"
+import DeliveryManLogin from "./components/ui/deliveryman/DeliveryManLogin"
 
 export default function App() {
   const [loginStatus, setLoginStatus] = useState(false);
@@ -86,11 +87,12 @@ export default function App() {
                 <Route path="/seller/sign-up" exact component={SellerSignUp} />
                 <Route path="/seller/login" exact component={SellerLogin} />
                 <Route path="/my-shops" exact component={LoginToShop} />
-                <Route path="/map" component={MyMap}/>
+                <Route path="/deliveryman/sign-up" exact component={DeliveryManSignUp} />
+                <Route path="/deliveryman/login" exact component={DeliveryManLogin} />
                 <Route path="/" exact component={Home} />
               </Switch>
               <Route path="/dashboard" component={ShopDashboard} />
-              <Route path="/deliveryman/dashboard/:deliverymanId" component={DeliveryBoyDashboard}/>
+              <Route path="/deliveryman/dashboard" component={DeliveryBoyDashboard}/>
             </ThemeProvider>
           </BrowserRouter>
         </MainContext.Provider>

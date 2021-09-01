@@ -1,10 +1,10 @@
-import React, {useState, useEffect, Fragment, } from "react";
+import {useState, useEffect, Fragment, } from "react";
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { Button, makeStyles, Grid, Paper } from "@material-ui/core";
+import { Button, makeStyles, Grid, FormControlLabel, Checkbox} from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -39,81 +39,19 @@ const useStyle = makeStyles(theme => ({
 
 // TODO: show map
 
-export default function DeliveryBoyOrders() {
+export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
     const dashboardStyles = useStyle()
-    const [orders, setOrders] = useState([])
 
     useEffect(() => {
-        setOrders([...orders,
-            {
-                orderId: "01",
-                from: "Mostafijur rahman",
-                orderedTime: Date.now(),
-                deliveryStatus: "pending",
-                total: 2000,
-                products: [
-                    {
-                        title: "burger",
-                        price: 290,
-                        quantity: 2,
-                        shopid: "1",
-                        shopTitle:"fast food shop"
-                    },
-                    {
-                        title: "cheezy pizza",
-                        price: 500,
-                        quantity: 2,
-                        shopid: "1",
-                        shopTitle:"fast food shop"
-                    },
-                    {
-                        title: "Napa",
-                        price: 5,
-                        quantity: 10,
-                        shopid: "10",
-                        shopTitle: "medicine shop"
-                    }
-                ]
-            },
-            {
-                orderId: "02",
-                from: "Hamza rahman",
-                orderedTime: Date.now(),
-                deliveryStatus: "pending",
-                total: 2000,
-                products: [
-                    {
-                        title: "burger",
-                        price: 290,
-                        quantity: 1,
-                        shopid: "1",
-                        shopTitle:"fast food shop"
-                    },
-                    {
-                        title: "cheezy pizza",
-                        price: 500,
-                        quantity: 1,
-                        shopid: "1",
-                        shopTitle:"fast food shop"
-                    },
-                    {
-                        title: "bata shoe",
-                        price: 1990,
-                        quantity: 1,
-                        shopid: "88",
-                        shopTitle:"cloth and shoe shop"
-                    }
-                ]
-            }
-        ])
+       
     }, [])
         
-    return (
+   return (
         <Fragment>
-            {
-                orders.map(order => (
-                    <div key={order.orderId}>
-                        <Accordion>
+            {/* {
+               orders.length ?  orders.map(order => (
+                    <div key={`${order["_id"]}`}>
+                        <Accordion className={dashboardStyles.accordion}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
                                 aria-controls="panel1a-content"
@@ -121,20 +59,20 @@ export default function DeliveryBoyOrders() {
                                 >
                                 <Grid container spacing={2}>
                                     <Grid item xs={6}>
-                                        <Typography>Order from { order.from}</Typography>
+                                        <Typography>Order from { order.customerName}</Typography>
                                     </Grid>
                                     <Grid item xs={2}>
                                         <Button
                                             variant="text"
-                                            classes={order.deliveryStatus === "pending" ?
+                                            classes={order.deliveryStatus ==="pending" ?
                                                 { root: dashboardStyles["status-btn-pending"] }
                                                 :  {root: dashboardStyles["status-btn-delivered"]}}
                                         >
-                                            {order.deliveryStatus.toUpperCase()}
+                                            {order.deliveryStatus === "pending" ? "PENDING" : "DELIVERED"}
                                         </Button>
                                     </Grid>
                                     <Grid item>
-                                        <Typography>{ new Date(order.orderedTime).toLocaleTimeString()}</Typography>
+                                        <Typography>{ order.time }</Typography>
                                     </Grid>
                                 </Grid>
                             </AccordionSummary>
@@ -147,7 +85,6 @@ export default function DeliveryBoyOrders() {
                                                 <TableCell colSpan={2}>Product Name</TableCell>
                                                 <TableCell>Quantities</TableCell>
                                                 <TableCell>Price</TableCell>
-                                                <TableCell colSpan={2}>Shop Name</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -160,7 +97,6 @@ export default function DeliveryBoyOrders() {
                                                         <TableCell colSpan={2}>{ product.title}</TableCell>
                                                         <TableCell>{product.quantity}</TableCell>
                                                         <TableCell>{product.price}</TableCell>
-                                                        <TableCell>{ product.shopTitle }</TableCell>
                                                     </TableRow>
                                                 ))
                                             }
@@ -174,11 +110,18 @@ export default function DeliveryBoyOrders() {
                                     </Table>
                                 </TableContainer>       
                             </AccordionDetails>
+                            <FormControlLabel
+                                style={{float: "right"}}
+                                control={<Checkbox checked={order.deliveryStatus === "delivered"}
+                                color="primary"
+                                onChange={(event) => {handleDeliveryStatus(event, order)}} />
+                            }
+                                label={order.deliveryStatus === "delivered" ? "Delivered" : "Mark as delivered" }
+                            />
                         </Accordion>
-                        <Paper classes={{root: dashboardStyles.paper}}></Paper>
                     </div>
-                ))
-            }
+                )) : null
+            } */}
         </Fragment>    
     )
 }

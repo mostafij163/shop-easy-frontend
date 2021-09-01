@@ -46,14 +46,14 @@ const useStyle = makeStyles(theme => ({
     }
 }))
 
-export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
+export default function ShopOrders({orders, handleDeliveryStatus}) {
     const dashboardStyles = useStyle()
         
     return (
         <Fragment>
             {
-                orders.map(order => (
-                    <div key={`${order.from}${order.orderedTime}`}>
+               orders.length ?  orders.map(order => (
+                    <div key={`${order["_id"]}`}>
                         <Accordion className={dashboardStyles.accordion}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
@@ -62,20 +62,20 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                                 >
                                 <Grid container spacing={2}>
                                     <Grid item xs={6}>
-                                        <Typography>Order from { order.from}</Typography>
+                                        <Typography>Order from { order.customerName}</Typography>
                                     </Grid>
                                     <Grid item xs={2}>
                                         <Button
                                             variant="text"
-                                            classes={!order.deliveryStatus ?
+                                            classes={order.deliveryStatus ==="pending" ?
                                                 { root: dashboardStyles["status-btn-pending"] }
                                                 :  {root: dashboardStyles["status-btn-delivered"]}}
                                         >
-                                            {order.deliveryStatus ? "DELIVERED" : "PENDING"}
+                                            {order.deliveryStatus === "pending" ? "PENDING" : "DELIVERED"}
                                         </Button>
                                     </Grid>
                                     <Grid item>
-                                        <Typography>{ new Date(order.orderedTime).toLocaleTimeString()}</Typography>
+                                        <Typography>{ order.time }</Typography>
                                     </Grid>
                                 </Grid>
                             </AccordionSummary>
@@ -88,7 +88,6 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                                                 <TableCell colSpan={2}>Product Name</TableCell>
                                                 <TableCell>Quantities</TableCell>
                                                 <TableCell>Price</TableCell>
-                                                <TableCell colSpan={2}>Shop Name</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -101,7 +100,6 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                                                         <TableCell colSpan={2}>{ product.title}</TableCell>
                                                         <TableCell>{product.quantity}</TableCell>
                                                         <TableCell>{product.price}</TableCell>
-                                                        <TableCell>{ product.shopTitle }</TableCell>
                                                     </TableRow>
                                                 ))
                                             }
@@ -117,15 +115,15 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                             </AccordionDetails>
                             <FormControlLabel
                                 style={{float: "right"}}
-                                control={<Checkbox checked={order.deliveryStatus}
+                                control={<Checkbox checked={order.deliveryStatus === "delivered"}
                                 color="primary"
-                                onChange={() => {handleDeliveryStatus(order)}} />
+                                onChange={(event) => {handleDeliveryStatus(event, order)}} />
                             }
-                                label={order.deliveryStatus ? "Delivered" : "Mark as delivered" }
+                                label={order.deliveryStatus === "delivered" ? "Delivered" : "Mark as delivered" }
                             />
                         </Accordion>
                     </div>
-                ))
+                )) : null
             }
         </Fragment>    
     )
