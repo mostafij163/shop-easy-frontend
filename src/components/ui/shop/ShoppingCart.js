@@ -103,28 +103,42 @@ export default function ShoppingCart({orderedProduct, handleRemoveItem}) {
     };
 
     function handleOrder() {
-        console.log(orderedProduct, total)
         if (userJwt && location.length && orderedProduct.length) {
             const decodedUser = jwt.decode(userJwt)
-            const productList = orderedProduct.map(prod => {
+
+            const shops = orderedProduct.map(product => product.shop)
+            const shopsArrUnique = Array.from(new Set(shops))
+
+            const shopsWithProduct = shopsArrUnique.map(shopId => {
+                const products = orderedProduct.filter(product => {
+                    if (product.shop === shopId) return product
+                })
+                const formatedProduct = products.map(product => {
+                    return {
+                        productId: product["_id"],
+                        title: product.title,
+                        price: product.price,
+                        quantity: product.quantity
+                    }
+                })
+
                 return {
-                    productId: prod["_id"],
-                    title: prod.title,
-                    price: prod.price,
-                    quantity: prod.quantity,
-                    shop: prod.shop,
+                    shopId: shopId,
+                    products: formatedProduct
                 }
             })
 
             const orderData = {
                 customer: decodedUser.sub,
                 customerName: decodedUser.name,
-                productList: productList,
+                productList: shopsWithProduct,
                 deliveryLocation: {
                     coordinates: [location[0], location[1]]
                 },
                 total: total
             }
+
+            console.log(orderData)
 
             axios.post('http://127.0.0.1:8000/order/new-order', orderData, {
                 headers: {

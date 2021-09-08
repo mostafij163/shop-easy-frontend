@@ -92,6 +92,7 @@ export default function ShopDashboard(props) {
   const [orders, setOrders] = useState([])
   const [userJwt, setUserJwt] = useState("")
   const [shopJwt, setShopJwt] = useState("");
+  const [socket, setSocket] = useState()
 
   useEffect(() => {
     const userToken = localStorage.getItem('user')
@@ -116,7 +117,7 @@ export default function ShopDashboard(props) {
         localStorage.setItem('shop', res.data.jwt)
       })
       .catch(err => {
-        console.log(err)
+        alert(err.message)
       })
     }
   }, [mainCtx, props.location.state, userJwt])
@@ -129,17 +130,22 @@ export default function ShopDashboard(props) {
           'x-shop-jwt': `Bearer ${shopJwt}`
         }
       })
+      setSocket(socket)
+    }
+  }, [userJwt, shopJwt])
+
+  useEffect(() => {
+    if (socket) {
       socket.on('new-order', function (orderData) {
         setNewOrders(orderData)
       })
     }
-  }, [userJwt, shopJwt])
+  }, [socket])
 
   useEffect(() => {
     if (newOrders) {
       setOrders([...orders, newOrders])
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newOrders])
   
   function fetchProducts(userJwt, shopJwt) {
@@ -180,7 +186,6 @@ export default function ShopDashboard(props) {
               return prod
             }
           })
-          console.log(productAfterDelete)
           setProducts(productAfterDelete)
       }
     }).catch(err => {
@@ -191,7 +196,14 @@ export default function ShopDashboard(props) {
     const handleDeliveryStatus = (event, order) => {
         const updatedOrders = orders.map(o => {
             if (o["_id"] === order["_id"]) {
-                o.deliveryStatus = event.target.checked ? "delivered" : "pending"
+              o.products.deliveryStatus = event.target.checked ? "delivered" : "pending"
+              const data =  {
+                id: order.id,
+                shopId: order.products.shopId,
+                changeTo: o.products.deliveryStatus
+              }
+
+              socket.emit("status-change-shop", data)
             }
             return o;
         })
@@ -281,7 +293,7 @@ export default function ShopDashboard(props) {
     const container = window !== undefined ? () => window().document.body : undefined;
 
     return (
-        <div className={dashboardStyles.root}> {console.log(orders)}
+        <div className={dashboardStyles.root}>
       <CssBaseline />
       <AppBar position="fixed" className={dashboardStyles.appBar}>
         <Toolbar>

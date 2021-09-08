@@ -42,8 +42,14 @@ const useStyle = makeStyles(theme => ({
         color: `${theme.palette.secondary.main} !important`,
     },
     accordion: {
-        marginTop: "2rem"
-    }
+        marginBottom: "1rem",
+        padding: "1rem"
+    },
+    accordionExpand: {
+        "&:last-child": {
+            backgroundColor: "#eaeaea"
+        }
+    },
 }))
 
 export default function ShopOrders({orders, handleDeliveryStatus}) {
@@ -54,7 +60,10 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
             {
                orders.length ?  orders.map(order => (
                     <div key={`${order["_id"]}`}>
-                        <Accordion className={dashboardStyles.accordion}>
+                       <Accordion
+                           className={dashboardStyles.accordion}
+                           classes={{expanded: dashboardStyles.accordionExpand}}
+                       >
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
                                 aria-controls="panel1a-content"
@@ -67,11 +76,11 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
                                     <Grid item xs={2}>
                                         <Button
                                             variant="text"
-                                            classes={order.deliveryStatus ==="pending" ?
+                                            classes={order.products.deliveryStatus ==="pending" ?
                                                 { root: dashboardStyles["status-btn-pending"] }
                                                 :  {root: dashboardStyles["status-btn-delivered"]}}
                                         >
-                                            {order.deliveryStatus === "pending" ? "PENDING" : "DELIVERED"}
+                                            {order.products.deliveryStatus === "pending" ? "PENDING" : "DELIVERED"}
                                         </Button>
                                     </Grid>
                                     <Grid item>
@@ -92,9 +101,9 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
                                         </TableHead>
                                         <TableBody>
                                             {
-                                                order.products.map(product => (
+                                                order.products.products.map(product => (
                                                     <TableRow
-                                                        key={product.title}
+                                                        key={product.productId}
                                                         className={dashboardStyles.hover }
                                                     >
                                                         <TableCell colSpan={2}>{ product.title}</TableCell>
@@ -115,11 +124,11 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
                             </AccordionDetails>
                             <FormControlLabel
                                 style={{float: "right"}}
-                                control={<Checkbox checked={order.deliveryStatus === "delivered"}
+                                control={<Checkbox checked={order.products.deliveryStatus === "delivered"}
                                 color="primary"
                                 onChange={(event) => {handleDeliveryStatus(event, order)}} />
                             }
-                                label={order.deliveryStatus === "delivered" ? "Delivered" : "Mark as delivered" }
+                                label={order.products.deliveryStatus === "delivered" ? "Delivered" : "Mark as delivered" }
                             />
                         </Accordion>
                     </div>

@@ -11,6 +11,11 @@
 # production
 /build
 
+# linting
+.eslintrc.json
+.prettierrc
+.env
+
 # token
 /src/store/map-box.js
 

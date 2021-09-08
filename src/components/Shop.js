@@ -94,8 +94,6 @@ export default function Shop() {
     }
 
     function handleQuantities(product) {
-        console.log(product)
-        console.log(orderedProduct)
         const existingProduct = orderedProduct.find(prod => prod["_id"] === product["_id"])
         if (!existingProduct) {
             const updatedProduct = [...orderedProduct, product]

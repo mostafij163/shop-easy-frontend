@@ -70,12 +70,19 @@ const useStyle = makeStyles(theme => ({
 export default function DeliveryManDashboard(props) {
   const dashboardStyles = useStyle()
   const mainCtx = useContext(MainContext)
-  const [user, setUser] = useState({})
+  const [userJwt, setUserJwt] = useState("")
   const [location, setLocation] = useState({
-    lngLat: [],
+    lngLat: [88.2625620408987, 25.896598854652247],
     timestamp: 0
   })
   const [noLocation, setNoLocation] = useState(true)
+  const [socket, setSocket] = useState()
+  const [newOrders, setNewOrders] = useState()
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    setUserJwt(localStorage.getItem('user'))
+  }, [])
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -98,7 +105,37 @@ export default function DeliveryManDashboard(props) {
     }
   }, [])
 
-    const [newOrders, setNewOrders] = useState(10)
+  useEffect(() => {
+    if (userJwt) {
+      const socket = io(`http://localhost:8000?coords=${location.lngLat}`, {
+        extraHeaders: {
+          Authorization: `Bearer ${userJwt}`
+        }
+      })
+      setSocket(socket)
+    }
+  }, [userJwt])
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("new-order", function (order) {
+        setNewOrders(order)
+      })
+
+      socket.on("delivery-status-change", function (changeToData) {
+        // TODO: 
+        // TODO: find the order and the respective shop and change the status
+      })
+    }
+  }, [socket])
+
+  useEffect(() => {
+    if (newOrders) {
+      setOrders([...orders, newOrders])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newOrders])
+
     const { window } = props;
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -115,7 +152,7 @@ export default function DeliveryManDashboard(props) {
           {
             text: "Orders",
             icon: <Badge
-              badgeContent={newOrders}
+              badgeContent={0}
               color="error"
             >
               <ShoppingCartIcon style={{ fontSize: "2rem" }} color="primary" />
@@ -225,7 +262,9 @@ export default function DeliveryManDashboard(props) {
                 </Hidden>
               </nav>
               <main className={dashboardStyles.content}>
-                  <Route path="/deliveryman/dashboard/orders" component={DeliveryBoyOrders} />
+                <Route path="/deliveryman/dashboard/orders" >
+                  <DeliveryBoyOrders orders={orders} />
+                </Route>
               </main>
             </>
             :
