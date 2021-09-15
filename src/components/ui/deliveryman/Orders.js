@@ -4,13 +4,25 @@ import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { Button, makeStyles, Grid, FormControlLabel, Checkbox} from "@material-ui/core";
+import {
+    Button,
+    makeStyles,
+    Grid,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+} from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import msToTime from "../../../store/miliSecToTime";
+import { mapboxApiKey } from "../../../store/map-box";
+import ReactMapGL, { Marker } from 'react-map-gl';
+import RoomIcon from '@material-ui/icons/Room';
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -46,47 +58,103 @@ const useStyle = makeStyles(theme => ({
     }
 }))
 
+// TODO: // TODO: // TODO: // TODO: 
+// TODO: 
 // TODO: show map
 
-export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
+export default function DeliveryBoyOrders({
+    orders,
+    statusChangeRequests,
+    handleStatusChangeAccept,
+    handleStatusChangeDecline,
+    deliveryManLocation
+}) {
     const dashboardStyles = useStyle()
+        const [viewport, setViewport] = useState({
+        width: "100vw",
+        height: "100vh",
+        latitude: deliveryManLocation[1],
+        longitude: deliveryManLocation[0],
+        zoom: 12
+    });
+    const [openMap, setOpenMap] = useState(false);
+    const [shopLocation, setShopLocation] = useState([])
 
-    console.log(orders)
+    // useEffect(() => {
+    //     if (deliveryManLocation.length) {
+    //         setViewport({
+    //             width: "100vw",
+    //             height: "100vh",
+    //             latitude: deliveryManLocation[1],
+    //             longitude: deliveryManLocation[0],
+    //             zoom: 15
+    //         })
+    //     }
+    // }, [deliveryManLocation])
 
-//     customerName: "jewel "
-// id: "6138e88d7eb709197473bb3d"
-// products: Array(1)
-// 0:
-// category: "CLOTHANDSHOE"
-// closingHour: "2021-08-23T14:00:39.982Z"
-// coordinates: (2) [90.36538821979354, 23.774435854993886]
-// id: "61238a127824480ca02f14bf"
-// name: "shyamoli cloth store"
-// openingHour: "2021-08-23T02:30:39.969Z"
-// products:
-// deliveryStatus: "pending"
-// products: Array(1)
-// 0: {productId: '61238b077824480ca02f14c5', title: 'Arong Shirt full sleeve ', price: 1750, quantity: 3}
-// length: 1
-// [[Prototype]]: Array(0)
-// shopId: "61238a127824480ca02f14bf"
-// [[Prototype]]: Object
-// total: 5250
-// [[Prototype]]: Object
-// length: 1
-// [[Prototype]]: Array(0)
-// time: "2021-09-08T16:45:01.423Z"
-// total: 5250
+    function handleOpenMap(lngLat) {
+         setShopLocation(lngLat)
+        setOpenMap(true)
+    }
 
+     const handleCloseMap = () => {
+        setOpenMap(false);
+    };
 
     useEffect(() => {
-       
-    }, [])
+            orders.map(order => {
+                statusChangeRequests.map(statusChangeRequest => {
+                    if (order.id == statusChangeRequest.id) {
+                        order.products.map(shopWithProducts => {
+                            if (shopWithProducts.id === statusChangeRequest.shopId) {
+                                shopWithProducts.requestStatusChange = true;
+                            }
+                        }) 
+                    }
+                })
+           })
+    }, [orders, statusChangeRequests])
         
    return (
-        <Fragment> {
+       <Fragment>
+           <div>
+                <Dialog
+                    fullScreen={true}
+                    open={openMap}
+                    onClose={handleCloseMap}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"Shop Location"}</DialogTitle>
+                    <DialogContent>
+                        <div>
+                            <ReactMapGL
+                                {...viewport}
+                                mapboxApiAccessToken={ mapboxApiKey}
+                                onViewportChange={nextViewport => setViewport(nextViewport)}
+                                mapStyle="mapbox://styles/mostafij163/cksalt6m652ig17qpge35l96v"
+                            >
+                                <Marker
+                                    latitude={deliveryManLocation[1]} 
+                                    longitude={deliveryManLocation[0]}
+                               ><RoomIcon style={{fontSize: "2rem"}} color= "primary" /></Marker>
+                               <Marker
+                                    latitude={shopLocation[1]} 
+                                    longitude={shopLocation[0]}
+                                ><RoomIcon style={{fontSize: "3rem", color:"red"}}/></Marker>
+                            </ReactMapGL>
+                        </div>
+                    </DialogContent>
+                    <DialogActions>
+                    <Button onClick={handleCloseMap} color="primary">
+                        Save
+                    </Button>
+                    </DialogActions>
+                </Dialog>
+            </div>
+           {
             orders.length ?  orders.map(order => (
-                <div key={`${order["_id"]}`}>
+                <div key={`${order.id}`}>
                     <Accordion
                         className={dashboardStyles.accordion}
                         classes={{expanded: dashboardStyles.accordionExpand}}
@@ -111,7 +179,9 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                                     </Button>
                                 </Grid>
                                 <Grid item>
-                                    <Typography>{ order.time }</Typography>
+                                    <Typography>{
+                                        msToTime(Date.now() - new Date(order.time).getTime())
+                                    }</Typography>
                                 </Grid>
                             </Grid>
                         </AccordionSummary>
@@ -145,12 +215,33 @@ export default function DeliveryBoyOrders({orders, handleDeliveryStatus}) {
                                                                 {shopWithProducts.products.deliveryStatus === "pending" ? "PENDING" : "DELIVERED"}
                                                             </Button>
                                                         </Grid>
-                                                        <Grid item>
+                                                        <Grid item xs={2}>
                                                             <Typography>{shopWithProducts.total } TK.</Typography>
+                                                        </Grid>
+                                                        <Grid item xs={2}>
+                                                            <Button
+                                                                variant="contained"
+                                                                color="primary"
+                                                                onClick={() => handleOpenMap(shopWithProducts.coordinates)}
+                                                            >Open Shop Location</Button>
                                                         </Grid>
                                                     </Grid>
                                                 </AccordionSummary>
                                                 <AccordionDetails>
+                                                    {
+                                                        shopWithProducts.requestStatusChange ?
+                                                            <div>
+                                                                <Button
+                                                                    color="primary"
+                                                                    variant="contained"
+                                                                    onClick={() => handleStatusChangeAccept(order.id, shopWithProducts.id)}
+                                                                >Accept as delivered</Button>
+                                                                <Button
+                                                                    onClick={() => handleStatusChangeDecline(order.id, shopWithProducts.id)}
+                                                                    variant="contained"
+                                                                >Decline</Button>
+                                                            </div> : null
+                                                    }
                                                     <TableContainer>
                                                         <Table sx={{ minWidth: 650, width: "100%" }} aria-label="caption table">
                                                             <caption>Order List</caption> 

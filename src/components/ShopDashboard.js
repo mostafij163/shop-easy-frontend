@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext} from "react";
 import Typography from '@material-ui/core/Typography';
-import { makeStyles, } from "@material-ui/core";
+import { makeStyles, Dialog, DialogActions, DialogTitle, Button} from "@material-ui/core";
 import { useTheme } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -93,6 +93,9 @@ export default function ShopDashboard(props) {
   const [userJwt, setUserJwt] = useState("")
   const [shopJwt, setShopJwt] = useState("");
   const [socket, setSocket] = useState()
+  const [open, setOpen] = useState(false);
+  const [deliveryStatusChange, setDeliveryStatusChange] = useState()
+  const [dialogContent, setDialogContent] = useState({})
 
   useEffect(() => {
     const userToken = localStorage.getItem('user')
@@ -135,9 +138,31 @@ export default function ShopDashboard(props) {
   }, [userJwt, shopJwt])
 
   useEffect(() => {
+    if (userJwt && shopJwt) {
+      axios.get(`http://localhost:8000/order/shop-orders`, {
+        headers: {
+          Authorization: `Bearer ${userJwt}`,
+          "x-shop-jwt": `Bearer ${shopJwt}`
+        }
+      }).then(res => {
+        if (res.status == 200) {
+          console.log(res.data)
+          setOrders(res.data)
+        }
+      })
+    }
+  }, [shopJwt, userJwt])
+
+  useEffect(() => {
     if (socket) {
       socket.on('new-order', function (orderData) {
+        console.log(orderData)
         setNewOrders(orderData)
+      })
+
+      socket.on("status-changed", function (data) {
+        setDeliveryStatusChange(data)
+        setOpen(true)
       })
     }
   }, [socket])
@@ -193,14 +218,14 @@ export default function ShopDashboard(props) {
     })
   }
 
-    const handleDeliveryStatus = (event, order) => {
+    const handleDeliveryStatus = (order, status) => {
         const updatedOrders = orders.map(o => {
             if (o["_id"] === order["_id"]) {
-              o.products.deliveryStatus = event.target.checked ? "delivered" : "pending"
               const data =  {
                 id: order.id,
                 shopId: order.products.shopId,
-                changeTo: o.products.deliveryStatus
+                changeTo: status,
+                deliveryMan: order.deliveryMan
               }
 
               socket.emit("status-change-shop", data)
@@ -208,7 +233,23 @@ export default function ShopDashboard(props) {
             return o;
         })
         setOrders(updatedOrders)
-    };
+  };
+
+  useEffect(() => {
+    if (deliveryStatusChange) {
+      const changedOrder = orders.find(order => {
+        if (order.id == deliveryStatusChange.id) {
+          order.products.deliveryStatus = deliveryStatusChange.deliveryStatus
+          return order
+        }
+      })
+      setDialogContent(changedOrder)
+    }
+  }, [deliveryStatusChange, orders])
+
+  const handleDialogClose = () => {
+    setOpen(false);
+  };
 
     const { window } = props;
     const theme = useTheme();
@@ -348,6 +389,27 @@ export default function ShopDashboard(props) {
         </Hidden>
       </nav>
         <main className={dashboardStyles.content}>
+          {
+            deliveryStatusChange ? 
+              <Dialog
+                open={open}
+                onClose={handleDialogClose}
+                aria-labelledby="delivery-status-change"
+                aria-describedby="alert-dialog-description"
+              >
+                <DialogTitle id="delivery-status-change">
+                  Order Of {dialogContent.customerName} <br /> OrderId: {dialogContent.id} <br /> Delivery Status: { deliveryStatusChange.deliveryStatus}
+                </DialogTitle>
+                <DialogActions>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setOpen(false)}
+                  >OK</Button>
+                </DialogActions>
+              </Dialog>
+            : null
+          }
           <Switch>
             <Route path="/dashboard/products" exact>
               <Product
@@ -380,14 +442,3 @@ export default function ShopDashboard(props) {
     </div>
   );
 }
-
-// closingHour: "4:01:47 PM"
-// createdAt: "2021-08-15T10:02:17.105Z"
-// description: "a medicine shop at opposite of national heart foundation hospital"
-// location: {type: "Point", _id: "6118e62978b4f52128aace7f", coordinates: {…}}
-// name: "mirpur medicine store"
-// openingHour: "4:01:47 PM"
-// owner: "6118ab3378b4f52128aace7d"
-// shopCategory: "MEDICINE"
-// updatedAt: "2021-08-15T10:02:17.105Z"
-// __v: 0

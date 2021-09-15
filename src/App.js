@@ -4,7 +4,7 @@ import { ThemeProvider } from '@material-ui/core/styles';
 import jwt from "jsonwebtoken"
 import Header from "./components/ui/Header";
 import ShopEasyMainTheme from './components/mainTheme';
-import OrderHistory from "./components/ui/OrdersHistory"
+import OrderHistory from "./components/ui/customer/OrdersHistory"
 import Home from "./components/ui/Home";
 import ShopDashboard from "./components/ShopDashboard";
 import Login from "./components/ui/customer/Login";

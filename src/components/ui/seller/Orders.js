@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { Fragment, } from "react";
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
@@ -8,8 +10,6 @@ import {
     Button,
     makeStyles,
     Grid,
-    Checkbox,
-    FormControlLabel,
 } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -17,6 +17,9 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import AccessTimeIcon from '@material-ui/icons/AccessTime';
+import CancelIcon from '@material-ui/icons/Cancel';
+import msToTime from "../../../store/miliSecToTime";
 
 const useStyle = makeStyles(theme => ({
     paper: {
@@ -84,7 +87,8 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
                                         </Button>
                                     </Grid>
                                     <Grid item>
-                                        <Typography>{ order.time }</Typography>
+                                       <Typography>{
+                                           msToTime(Date.now() - new Date(order.time).getTime())}</Typography>
                                     </Grid>
                                 </Grid>
                             </AccordionSummary>
@@ -122,14 +126,31 @@ export default function ShopOrders({orders, handleDeliveryStatus}) {
                                     </Table>
                                 </TableContainer>       
                             </AccordionDetails>
-                            <FormControlLabel
-                                style={{float: "right"}}
-                                control={<Checkbox checked={order.products.deliveryStatus === "delivered"}
-                                color="primary"
-                                onChange={(event) => {handleDeliveryStatus(event, order)}} />
+                           {
+                               order.products.deliveryStatus == "delivered" ?
+                                   <Button
+                                       variant="contained"
+                                       color="primary"
+                                    onClick={() => {handleDeliveryStatus(order, "pending")}}
+                                   >
+                                       <CancelIcon style={{fontSize: "2rem"}}/>   
+                                       <Typography
+                                           variant="h6"
+                                           style={{ display: "inline-block" }}
+                                       >Change to pending</Typography>
+                                   </Button> :
+                                   <Button
+                                       variant="contained"
+                                       color="primary"
+                                    onClick={() => {handleDeliveryStatus(order, "delivered")}}
+                                   >
+                                       <AccessTimeIcon style={{fontSize: "2rem"}}/>
+                                       <Typography
+                                           variant="h6"
+                                           style={{ display: "inline-block" }}
+                                       >Mark as delivered</Typography>
+                                   </Button>
                             }
-                                label={order.products.deliveryStatus === "delivered" ? "Delivered" : "Mark as delivered" }
-                            />
                         </Accordion>
                     </div>
                 )) : null

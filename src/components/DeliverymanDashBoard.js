@@ -20,6 +20,7 @@ import { Link, Route } from "react-router-dom";
 import DeliveryBoyOrders from "./ui/deliveryman/Orders";
 import { io } from "socket.io-client"
 import MainContext from "../store/main-context";
+import axios from "axios";
 
 const drawerWidth = 240;
 
@@ -72,13 +73,15 @@ export default function DeliveryManDashboard(props) {
   const mainCtx = useContext(MainContext)
   const [userJwt, setUserJwt] = useState("")
   const [location, setLocation] = useState({
-    lngLat: [88.2625620408987, 25.896598854652247],
+    lngLat: [],
     timestamp: 0
   })
   const [noLocation, setNoLocation] = useState(true)
   const [socket, setSocket] = useState()
   const [newOrders, setNewOrders] = useState()
   const [orders, setOrders] = useState([]);
+  const [newStatusChangeRequest, setNewStatusChangeRequest] = useState()
+  const [statusChangeRequests, setStatusChangeRequests] = useState([])
 
   useEffect(() => {
     setUserJwt(localStorage.getItem('user'))
@@ -106,7 +109,7 @@ export default function DeliveryManDashboard(props) {
   }, [])
 
   useEffect(() => {
-    if (userJwt) {
+    if (userJwt&& location.lngLat.length) {
       const socket = io(`http://localhost:8000?coords=${location.lngLat}`, {
         extraHeaders: {
           Authorization: `Bearer ${userJwt}`
@@ -114,17 +117,17 @@ export default function DeliveryManDashboard(props) {
       })
       setSocket(socket)
     }
-  }, [userJwt])
+  }, [userJwt, location])
 
   useEffect(() => {
     if (socket) {
       socket.on("new-order", function (order) {
+        console.log(order)
         setNewOrders(order)
       })
 
       socket.on("delivery-status-change", function (changeToData) {
-        // TODO: 
-        // TODO: find the order and the respective shop and change the status
+        setNewStatusChangeRequest(changeToData)
       })
     }
   }, [socket])
@@ -135,6 +138,52 @@ export default function DeliveryManDashboard(props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newOrders])
+
+  useEffect(() => {
+    if (userJwt) {
+      axios.get("http://localhost:8000/order/deliveryman-orders", {
+        headers: {
+          Authorization: `Bearer ${userJwt}`
+        }
+      }).then(res => {
+        if (res.status == 200) {
+          console.log(res.data)
+          setOrders(res.data)
+        }
+      })
+    }
+  }, [userJwt])
+
+  useEffect(() => {
+    if (newStatusChangeRequest) {
+      setStatusChangeRequests([...statusChangeRequests, newStatusChangeRequest])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newStatusChangeRequest])
+
+  function handleStatusChangeAccept(orderId, shopId) {
+    const updatedOrders = orders.map(order => {
+      if (order.id == orderId) {
+        const shopWithProducts = order.products.find(shopWithProd => shopWithProd.id == shopId)
+        shopWithProducts.products.deliveryStatus = "delivered"
+        socket.emit("status-changed", {
+          id: orderId,
+          shopId: shopId,
+          deliveryStatus: "delivered"
+        })
+      }
+      return order
+    })
+    setOrders(updatedOrders)
+  }
+
+  function handleStatusChangeDecline(orderId, shopId) {
+    socket.emit("status-changed", {
+      id: orderId,
+      shopId: shopId,
+      deliveryStatus: "pending"
+    })
+  }
 
     const { window } = props;
   const theme = useTheme();
@@ -263,7 +312,13 @@ export default function DeliveryManDashboard(props) {
               </nav>
               <main className={dashboardStyles.content}>
                 <Route path="/deliveryman/dashboard/orders" >
-                  <DeliveryBoyOrders orders={orders} />
+                  <DeliveryBoyOrders
+                    orders={orders}
+                    deliveryManLocation={location.lngLat}
+                    statusChangeRequests={statusChangeRequests}
+                    handleStatusChangeAccept={handleStatusChangeAccept}
+                    handleStatusChangeDecline={handleStatusChangeDecline}
+                  />
                 </Route>
               </main>
             </>
