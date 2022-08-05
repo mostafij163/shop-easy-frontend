@@ -137,7 +137,7 @@ export default function Signup() {
                     value={name}
                     onChange={handleNameChange}
             />
-            <FormControl className={clsx(classes.margin, classes.textField), classes.input} variant="outlined">
+            <FormControl className={[clsx([classes.margin, classes.textField]), classes.input]} variant="outlined">
                 <InputLabel htmlFor="password">Password</InputLabel>
                 <OutlinedInput
                 id="password"
@@ -159,7 +159,7 @@ export default function Signup() {
                 labelWidth={70}
                 />
             </FormControl>
-            <FormControl className={clsx(classes.margin, classes.textField), classes.input} variant="outlined">
+            <FormControl className={[clsx(classes.margin, classes.textField), classes.input]} variant="outlined">
                 <InputLabel htmlFor="confirm-password">Confirm Password</InputLabel>
                 <OutlinedInput
                 id="confirm-password"
@@ -188,7 +188,7 @@ export default function Signup() {
                 className={classes["sign-btn"]}
                 to="/sign-up"
             >
-                <Typography variant="h7">Sign Up</Typography>
+                <Typography variant="h6">Sign Up</Typography>
             </Button>
         </form>
     </Paper>
